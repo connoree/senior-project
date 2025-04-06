@@ -23,10 +23,19 @@ data "aws_ami" "vulnerable-db" {
   owners = [ "self" ]
 }
 
-# EC2 WEB SERVER IN PUBLIC SUBNET
+data "aws_ami" "vulnerable-web" {
+  most_recent = true
+
+  filter {
+    name = "name"
+    values = [ "vulnerable-web-ami-*" ]
+  }
+
+  owners = [ "self" ]
+}
 
 resource "aws_instance" "web_server" {
-  ami = data.aws_ami.ubuntu.id
+  ami = data.aws_ami.vulnerable-web.id
   instance_type = "t3.micro"
   subnet_id = aws_subnet.public_subnet.id
   vpc_security_group_ids = [ aws_security_group.web_security_group.id ]
