@@ -29,6 +29,24 @@ resource "aws_security_group" "web_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Telnet
+  ingress {
+    description = "Telnet"
+    from_port = 23
+    to_port = 23
+    protocol = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+
+  # FTP
+  ingress {
+    description = "FTP"
+    from_port = 21
+    to_port = 21
+    protocol = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+
   egress {
     description = "Allow all outbound traffic"
     from_port = 0
@@ -61,13 +79,21 @@ resource "aws_security_group" "db_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # MISCONFIGURATION
   ingress {
-    description = "Allow traffic from everywhere"
+    description = "Public MySQL"
     from_port = 3306
     to_port = 3306
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Legacy RSH
+  ingress {
+    description = "RSH/Rlogin"
+    from_port = 514
+    to_port = 514
+    protocol = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
   }
 
   egress {

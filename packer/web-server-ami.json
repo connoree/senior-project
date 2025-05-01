@@ -24,29 +24,41 @@
                 "sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config",
                 "sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config",
                 "sudo systemctl restart sshd",
+    
                 "echo 'SETTING PASSWORD FOR UBUNTU USER'",
                 "echo 'ubuntu:Password123' | sudo chpasswd",
-                "echo 'DISABLING CLOUD-INIT LOCK FOR UBUNTU USER'",
+    
+                "echo 'DISABLING CLOUD‑INIT LOCK FOR UBUNTU USER'",
                 "sudo bash -c 'cat > /etc/cloud/cloud.cfg.d/99-disable-lock.cfg <<EOF\nsystem_info:\n   default_user:\n      name: ubuntu\n      lock_passwd: false\nEOF'",
                 "sudo passwd -u ubuntu",
-                "",
+    
                 "echo 'CREATING INSECURE ADMIN USER'",
-                "sudo useradd -m -p $(openssl passwd -1 'Password123') insecureadmin",
-                "sudo sh -c 'printf \"\\ninsecureadmin ALL=(ALL) NOPASSWD:ALL\\n\" >> /etc/sudoers'",
-                "",
-                "echo 'DISABLING APT POST-INVOKE SCRIPT (command-not-found)...'",
-                "sudo bash -c 'echo \"APT::Update::Post-Invoke-Success \\\"\\\";\" > /etc/apt/apt.conf.d/99ignore-postinvoke'",
-                "",
-                "echo 'INSTALLING APACHE WEB SERVER'",
+                "sudo useradd -m -p $(openssl passwd -1 \"Password123\") insecureadmin",
+                "sudo bash -c 'printf \"\\ninsecureadmin ALL=(ALL) NOPASSWD:ALL\\n\" >> /etc/sudoers'",
+    
+                "echo 'REMOVING command-not-found PACKAGE (avoids APT post‑invoke error)'",
+                "sudo apt-get remove -y command-not-found",
+    
+                "echo 'APT UPDATE & INSTALLING VULNERABLE SERVICES (Apache, FTP, Telnet, inetd)'",
                 "sudo apt-get update -y",
-                "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y apache2",
-                "",
-                "echo 'CONFIGURING APACHE WITH VULNERABLE SETTINGS'",
+                "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y apache2 vsftpd telnetd openbsd-inetd || sudo apt-get -y -f install",
+                "sudo systemctl enable --now apache2",
+                "sudo systemctl enable --now vsftpd",
+                "sudo systemctl enable --now openbsd-inetd",    
+                
+                "echo 'CONFIGURING APACHE WITH VULNERABLE OPTIONS'",
                 "sudo sed -i 's/Options Indexes FollowSymLinks/Options Indexes FollowSymLinks MultiViews/' /etc/apache2/apache2.conf",
-                "",
+    
+                "echo 'ENABLING SELF‑SIGNED SSL (port 443)'",
+                "sudo a2enmod ssl",
+                "sudo openssl req -x509 -nodes -days 365 -subj '/CN=lab' -newkey rsa:2048 \\",
+                "              -keyout /etc/ssl/private/lab.key -out /etc/ssl/certs/lab.crt",
+                "echo '<VirtualHost *:443>\\n  SSLEngine on\\n  SSLCertificateFile /etc/ssl/certs/lab.crt\\n  SSLCertificateKeyFile /etc/ssl/private/lab.key\\n  DocumentRoot /var/www/html\\n</VirtualHost>' | sudo tee /etc/apache2/sites-available/000-default-ssl.conf",
+                "sudo a2ensite 000-default-ssl",
+                "sudo systemctl restart apache2",
+    
                 "echo 'DEPLOYING VULNERABLE WEB PAGE'",
-                "sudo bash -c 'echo \"<html><body><h1>Vulnerable Web Server</h1><p>This server is intentionally vulnerable for educational purposes.</p></body></html>\" > /var/www/html/index.html'"
-            ]
+                "sudo bash -c 'echo \"<html><body><h1>Vulnerable Web Server</h1><p>This server is intentionally vulnerable for educational purposes.</p></body></html>\" > /var/www/html/index.html'"            ]
         },
         {
             "type": "file",
