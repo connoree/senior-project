@@ -1,0 +1,1 @@
+An AWS-based educational lab environment designed with Terraform and Packer, containing intentionally insecure configurations (weak SSH, over-privileged users, insecure MySQL setup) for hands-on practice in vulnerability assessment, exploitation, and remediation.
